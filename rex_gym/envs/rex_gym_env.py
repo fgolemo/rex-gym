@@ -401,7 +401,7 @@ class RexGymEnv(gym.Env):
 
         action = self._transform_action_to_motor_command(action)
         self.rex.Step(action)
-        reward = self._reward()
+        reward, reward_components = self._reward()
         done = self._termination()
         # @TODO fix logging
         # if self._log_path is not None:
@@ -410,7 +410,17 @@ class RexGymEnv(gym.Env):
         self._env_step_counter += 1
         if done:
             self.rex.Terminate()
-        return np.array(self._get_observation()), reward, done, {"action": action}
+        return (
+            np.array(self._get_observation()),
+            reward,
+            done,
+            {
+                "action": action,
+                "reward_run": reward_components[0],
+                "reward_ctrl": reward_components[1],
+                "reward_stable": np.sum(reward_components[2:]),
+            },
+        )
 
     def render(self, mode="rgb_array", close=False):
         if mode != "rgb_array":
@@ -539,7 +549,7 @@ class RexGymEnv(gym.Env):
         weighted_objectives = [o * w for o, w in zip(objectives, self._objective_weights)]
         reward = sum(weighted_objectives)
         self._objectives.append(objectives)
-        return reward
+        return reward, objectives
 
     def get_objectives(self):
         return self._objectives
