@@ -24,9 +24,7 @@ SENSOR_NOISE_STDDEV = rex.SENSOR_NOISE_STDDEV
 DEFAULT_URDF_VERSION = "default"
 NUM_SIMULATION_ITERATION_STEPS = 300
 
-REX_URDF_VERSION_MAP = {
-    DEFAULT_URDF_VERSION: rex.Rex
-}
+REX_URDF_VERSION_MAP = {DEFAULT_URDF_VERSION: rex.Rex}
 
 
 def convert_to_list(obj):
@@ -47,58 +45,61 @@ class RexGymEnv(gym.Env):
       expenditure.
 
       """
+
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 100}
 
-    def __init__(self,
-                 debug=False,
-                 urdf_root=pybullet_data.getDataPath(),
-                 urdf_version=None,
-                 distance_weight=1.0,
-                 energy_weight=0.0005,
-                 shake_weight=0.005,
-                 drift_weight=2.0,
-                 distance_limit=float("inf"),
-                 observation_noise_stdev=SENSOR_NOISE_STDDEV,
-                 self_collision_enabled=True,
-                 motor_velocity_limit=np.inf,
-                 pd_control_enabled=False,
-                 leg_model_enabled=True,
-                 accurate_motor_model_enabled=False,
-                 remove_default_joint_damping=False,
-                 motor_kp=2.0,
-                 motor_kd=0.03,
-                 control_latency=0.0,
-                 pd_latency=0.0,
-                 torque_control_enabled=False,
-                 motor_overheat_protection=False,
-                 hard_reset=True,
-                 on_rack=False,
-                 render=True,
-                 num_steps_to_log=1000,
-                 action_repeat=1,
-                 control_time_step=None,
-                 env_randomizer=None,
-                 forward_reward_cap=float("inf"),
-                 reflection=True,
-                 log_path=None,
-                 target_orient=None,
-                 init_orient=None,
-                 target_position=None,
-                 start_position=None,
-                 base_y=0.0,
-                 base_z=0.0,
-                 base_roll=0.0,
-                 base_pitch=0.0,
-                 base_yaw=0.0,
-                 step_length=None,
-                 step_rotation=None,
-                 step_angle=None,
-                 step_period=None,
-                 backwards=None,
-                 signal_type="ik",
-                 terrain_type="plane",
-                 terrain_id=None,
-                 mark='base'):
+    def __init__(
+        self,
+        debug=False,
+        urdf_root=pybullet_data.getDataPath(),
+        urdf_version=None,
+        distance_weight=1.0,
+        energy_weight=0.0005,
+        shake_weight=0.005,
+        drift_weight=2.0,
+        distance_limit=float("inf"),
+        observation_noise_stdev=SENSOR_NOISE_STDDEV,
+        self_collision_enabled=True,
+        motor_velocity_limit=np.inf,
+        pd_control_enabled=False,
+        leg_model_enabled=True,
+        accurate_motor_model_enabled=False,
+        remove_default_joint_damping=False,
+        motor_kp=2.0,
+        motor_kd=0.03,
+        control_latency=0.0,
+        pd_latency=0.0,
+        torque_control_enabled=False,
+        motor_overheat_protection=False,
+        hard_reset=True,
+        on_rack=False,
+        render=True,
+        num_steps_to_log=1000,
+        action_repeat=1,
+        control_time_step=None,
+        env_randomizer=None,
+        forward_reward_cap=float("inf"),
+        reflection=True,
+        log_path=None,
+        target_orient=None,
+        init_orient=None,
+        target_position=None,
+        start_position=None,
+        base_y=0.0,
+        base_z=0.0,
+        base_roll=0.0,
+        base_pitch=0.0,
+        base_yaw=0.0,
+        step_length=None,
+        step_rotation=None,
+        step_angle=None,
+        step_period=None,
+        backwards=None,
+        signal_type="ik",
+        terrain_type="plane",
+        terrain_id=None,
+        mark="base",
+    ):
         """ Initialize the rex gym environment.
 
             Args:
@@ -158,7 +159,7 @@ class RexGymEnv(gym.Env):
               ValueError: If the urdf_version is not supported.
         """
         self.mark = mark
-        self.num_motors = mark_constants.MARK_DETAILS['motors_num'][self.mark]
+        self.num_motors = mark_constants.MARK_DETAILS["motors_num"][self.mark]
         self.motor_velocity_obs_index = MOTOR_ANGLE_OBSERVATION_INDEX + self.num_motors
         self.motor_torque_obs_index = self.motor_velocity_obs_index + self.num_motors
         self.base_orientation_obs_index = self.motor_torque_obs_index + self.num_motors
@@ -263,19 +264,19 @@ class RexGymEnv(gym.Env):
             "base_z": (-0.048, 0.021, 0),
             "roll": (-np.pi / 4, np.pi / 4, 0),
             "pitch": (-np.pi / 4, np.pi / 4, 0),
-            "yaw": (-np.pi / 4, np.pi / 4, 0)
+            "yaw": (-np.pi / 4, np.pi / 4, 0),
         }
         self.seed()
         self._backwards = backwards
-        self._terrain_type = "plane"
+        self._terrain_type = terrain_type
         self._terrain_id = terrain_id
         self.reset()
         self._terrain_type = terrain_type
         self.terrain = Terrain(self._terrain_type, self._terrain_id)
         if self._terrain_type is not "plane":
             self.terrain.generate_terrain(self)
-        observation_high = (self._get_observation_upper_bound() + OBSERVATION_EPS)
-        observation_low = (self._get_observation_lower_bound() - OBSERVATION_EPS)
+        observation_high = self._get_observation_upper_bound() + OBSERVATION_EPS
+        observation_low = self._get_observation_lower_bound() - OBSERVATION_EPS
         action_dim = self.num_motors
         action_high = np.array([self._action_bound] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high)
@@ -303,21 +304,21 @@ class RexGymEnv(gym.Env):
         # rex_logging.preallocate_episode_proto(self._episode_proto, self._num_steps_to_log)
         if self._hard_reset:
             self._pybullet_client.resetSimulation()
-            self._pybullet_client.setPhysicsEngineParameter(
-                numSolverIterations=int(self._num_bullet_solver_iterations))
+            self._pybullet_client.setPhysicsEngineParameter(numSolverIterations=int(self._num_bullet_solver_iterations))
             self._pybullet_client.setTimeStep(self._time_step)
             self._ground_id = self._pybullet_client.loadURDF("%s/plane.urdf" % self._urdf_root)
             if self._reflection:
                 self._pybullet_client.changeVisualShape(self._ground_id, -1, rgbaColor=[1, 1, 1, 0.8])
                 self._pybullet_client.configureDebugVisualizer(
-                    self._pybullet_client.COV_ENABLE_PLANAR_REFLECTION, self._ground_id)
+                    self._pybullet_client.COV_ENABLE_PLANAR_REFLECTION, self._ground_id
+                )
             self._pybullet_client.setGravity(0, 0, -10)
             acc_motor = self._accurate_motor_model_enabled
             motor_protect = self._motor_overheat_protection
             if self._urdf_version not in REX_URDF_VERSION_MAP:
                 raise ValueError("%s is not a supported urdf_version." % self._urdf_version)
             else:
-                self.rex = (REX_URDF_VERSION_MAP[self._urdf_version](
+                self.rex = REX_URDF_VERSION_MAP[self._urdf_version](
                     pybullet_client=self._pybullet_client,
                     action_repeat=self._action_repeat,
                     urdf_root=self._urdf_root,
@@ -336,10 +337,9 @@ class RexGymEnv(gym.Env):
                     motor_overheat_protection=motor_protect,
                     on_rack=self._on_rack,
                     terrain_id=self._terrain_id,
-                    mark=self.mark))
-        self.rex.Reset(reload_urdf=False,
-                       default_motor_angles=initial_motor_angles,
-                       reset_time=reset_duration)
+                    mark=self.mark,
+                )
+        self.rex.Reset(reload_urdf=False, default_motor_angles=initial_motor_angles, reset_time=reset_duration)
 
         # Loop over all env randomizers.
         for env_randomizer in self._env_randomizers:
@@ -351,8 +351,7 @@ class RexGymEnv(gym.Env):
         self._last_base_position = [0, 0, 0]
         self._last_base_orientation = [0, 0, 0, 1]
         self._objectives = []
-        self._pybullet_client.resetDebugVisualizerCamera(self._cam_dist, self._cam_yaw,
-                                                         self._cam_pitch, [0, 0, 0])
+        self._pybullet_client.resetDebugVisualizerCamera(self._cam_dist, self._cam_yaw, self._cam_pitch, [0, 0, 0])
         self._pybullet_client.configureDebugVisualizer(self._pybullet_client.COV_ENABLE_RENDERING, 1)
         return self._get_observation()
 
@@ -361,7 +360,7 @@ class RexGymEnv(gym.Env):
         return [seed]
 
     def _transform_action_to_motor_command(self, action):
-        if len(action) != mark_constants.MARK_DETAILS['motors_num'][self.mark]:
+        if len(action) != mark_constants.MARK_DETAILS["motors_num"][self.mark]:
             # extend with arm rest pose
             action = np.concatenate((action, rex_constants.ARM_POSES["rest"]))
         return action
@@ -411,7 +410,7 @@ class RexGymEnv(gym.Env):
         self._env_step_counter += 1
         if done:
             self.rex.Terminate()
-        return np.array(self._get_observation()), reward, done, {'action': action}
+        return np.array(self._get_observation()), reward, done, {"action": action}
 
     def render(self, mode="rgb_array", close=False):
         if mode != "rgb_array":
@@ -423,17 +422,18 @@ class RexGymEnv(gym.Env):
             yaw=self._cam_yaw,
             pitch=self._cam_pitch,
             roll=0,
-            upAxisIndex=2)
-        proj_matrix = self._pybullet_client.computeProjectionMatrixFOV(fov=60,
-                                                                       aspect=float(RENDER_WIDTH) / RENDER_HEIGHT,
-                                                                       nearVal=0.1,
-                                                                       farVal=100.0)
+            upAxisIndex=2,
+        )
+        proj_matrix = self._pybullet_client.computeProjectionMatrixFOV(
+            fov=60, aspect=float(RENDER_WIDTH) / RENDER_HEIGHT, nearVal=0.1, farVal=100.0
+        )
         (_, _, px, _, _) = self._pybullet_client.getCameraImage(
             width=RENDER_WIDTH,
             height=RENDER_HEIGHT,
             renderer=self._pybullet_client.ER_BULLET_HARDWARE_OPENGL,
             viewMatrix=view_matrix,
-            projectionMatrix=proj_matrix)
+            projectionMatrix=proj_matrix,
+        )
         rgb_array = np.array(px)
         rgb_array = rgb_array[:, :, :3]
         return rgb_array
@@ -444,7 +444,9 @@ class RexGymEnv(gym.Env):
         Returns:
           A numpy array of motor angles.
         """
-        return np.array(self._observation[MOTOR_ANGLE_OBSERVATION_INDEX:MOTOR_ANGLE_OBSERVATION_INDEX + self.num_motors])
+        return np.array(
+            self._observation[MOTOR_ANGLE_OBSERVATION_INDEX : MOTOR_ANGLE_OBSERVATION_INDEX + self.num_motors]
+        )
 
     def get_rex_motor_velocities(self):
         """Get the rex's motor velocities.
@@ -453,7 +455,8 @@ class RexGymEnv(gym.Env):
           A numpy array of motor velocities.
         """
         return np.array(
-            self._observation[self.motor_velocity_obs_index:self.motor_velocity_obs_index + self.num_motors])
+            self._observation[self.motor_velocity_obs_index : self.motor_velocity_obs_index + self.num_motors]
+        )
 
     def get_rex_motor_torques(self):
         """Get the rex's motor torques.
@@ -461,8 +464,7 @@ class RexGymEnv(gym.Env):
         Returns:
           A numpy array of motor torques.
         """
-        return np.array(
-            self._observation[self.motor_torque_obs_index:self.motor_torque_obs_index + self.num_motors])
+        return np.array(self._observation[self.motor_torque_obs_index : self.motor_torque_obs_index + self.num_motors])
 
     def get_rex_base_orientation(self):
         """Get the rex's base orientation, represented by a quaternion.
@@ -470,7 +472,7 @@ class RexGymEnv(gym.Env):
         Returns:
           A numpy array of rex's orientation.
         """
-        return np.array(self._observation[self.base_orientation_obs_index:])
+        return np.array(self._observation[self.base_orientation_obs_index :])
 
     def is_fallen(self):
         """Decide whether Rex has fallen.
@@ -532,9 +534,7 @@ class RexGymEnv(gym.Env):
         local_up_vec = rot_matrix[6:]
         shake_reward = -abs(np.dot(np.asarray([1, 1, 0]), np.asarray(local_up_vec)))
         # shake_reward = -abs(observation[4])
-        energy_reward = -np.abs(
-            np.dot(self.rex.GetMotorTorques(),
-                   self.rex.GetMotorVelocities())) * self._time_step
+        energy_reward = -np.abs(np.dot(self.rex.GetMotorTorques(), self.rex.GetMotorVelocities())) * self._time_step
         objectives = [forward_reward, energy_reward, drift_reward, shake_reward]
         weighted_objectives = [o * w for o, w in zip(objectives, self._objective_weights)]
         reward = sum(weighted_objectives)
@@ -603,9 +603,9 @@ class RexGymEnv(gym.Env):
         upper_bound = np.zeros(self._get_observation_dimension())
         num_motors = self.rex.num_motors
         upper_bound[0:num_motors] = math.pi  # Joint angle.
-        upper_bound[num_motors:2 * num_motors] = motor.MOTOR_SPEED_LIMIT  # Joint velocity.
-        upper_bound[2 * num_motors:3 * num_motors] = motor.OBSERVED_TORQUE_LIMIT  # Joint torque.
-        upper_bound[3 * num_motors:] = 1.0  # Quaternion of base orientation.
+        upper_bound[num_motors : 2 * num_motors] = motor.MOTOR_SPEED_LIMIT  # Joint velocity.
+        upper_bound[2 * num_motors : 3 * num_motors] = motor.OBSERVED_TORQUE_LIMIT  # Joint torque.
+        upper_bound[3 * num_motors :] = 1.0  # Quaternion of base orientation.
         return upper_bound
 
     def _get_observation_lower_bound(self):
@@ -637,9 +637,8 @@ class RexGymEnv(gym.Env):
         self.control_time_step = control_step
         self._time_step = simulation_step
         self._action_repeat = int(round(control_step / simulation_step))
-        self._num_bullet_solver_iterations = (NUM_SIMULATION_ITERATION_STEPS / self._action_repeat)
-        self._pybullet_client.setPhysicsEngineParameter(
-            numSolverIterations=self._num_bullet_solver_iterations)
+        self._num_bullet_solver_iterations = NUM_SIMULATION_ITERATION_STEPS / self._action_repeat
+        self._pybullet_client.setPhysicsEngineParameter(numSolverIterations=self._num_bullet_solver_iterations)
         self._pybullet_client.setTimeStep(self._time_step)
         self.rex.SetTimeSteps(action_repeat=self._action_repeat, simulation_step=self._time_step)
 
